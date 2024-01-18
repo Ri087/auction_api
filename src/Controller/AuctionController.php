@@ -3,7 +3,11 @@
 namespace App\Controller;
 
 use App\Entity\Auction;
+use App\Entity\DownloadFiles;
+use App\Entity\Image;
 use App\Repository\AuctionRepository;
+use Doctrine\Common\Cache\Cache;
+use Doctrine\ORM\Cache as ORMCache;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -15,6 +19,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 
 class AuctionController extends AbstractController
 {
@@ -32,8 +39,20 @@ class AuctionController extends AbstractController
 
     public function getAllAuction(AuctionRepository $repository, SerializerInterface $serializer): JsonResponse
     {
+        $filesystemAdapter = new FilesystemAdapter();
+        $cache = new TagAwareAdapter($filesystemAdapter);
+
+
         $auction = $repository->findAll();
-        $jsonAuction = $serializer->serialize($auction, 'json', ['groups' => 'getAllAuction']);
+
+        $jsonAuction = $cache->get('AuctiontagCache', function (ItemInterface $item) use ($auction, $serializer, $repository) {
+            $item->expiresAfter(3600);
+            $item->tag('auction');
+            echo "Cache miss!\n";
+            // $jsonAuction = $serializer->serialize($auction, 'json', ['groups' => 'getAllAuction']);
+            // $AuctionList = $repository->findAll();
+            return $serializer->serialize($auction, 'json', ['groups' => 'getAllAuction']);
+        });
         return new JsonResponse($jsonAuction, Response::HTTP_OK, [], true);
     }
 
@@ -52,6 +71,8 @@ class AuctionController extends AbstractController
         $auction = $serializer->deserialize($request->getContent(), Auction::class, 'json');
         $auction->setCreatedAt(new \DateTimeImmutable());
         $auction->setUpdatedAt(new \DateTimeImmutable());
+
+
 
         $entityManager->persist($auction);
         $entityManager->flush();

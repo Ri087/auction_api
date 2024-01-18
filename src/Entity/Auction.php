@@ -57,9 +57,13 @@ class Auction
     #[ORM\OneToMany(mappedBy: 'auction', targetEntity: Offer::class)]
     private Collection $offers;
 
+    #[ORM\OneToMany(mappedBy: 'auction_id', targetEntity: DownloadFiles::class)]
+    private Collection $downloadFiles;
+
     public function __construct()
     {
         $this->offers = new ArrayCollection();
+        $this->downloadFiles = new ArrayCollection();
     }
 
 
@@ -209,5 +213,35 @@ class Auction
     public function __toString(): string
     {
         return $this->item_name;
+    }
+
+    /**
+     * @return Collection<int, DownloadFiles>
+     */
+    public function getDownloadFiles(): Collection
+    {
+        return $this->downloadFiles;
+    }
+
+    public function addDownloadFile(DownloadFiles $downloadFile): static
+    {
+        if (!$this->downloadFiles->contains($downloadFile)) {
+            $this->downloadFiles->add($downloadFile);
+            $downloadFile->setAuctionId($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDownloadFile(DownloadFiles $downloadFile): static
+    {
+        if ($this->downloadFiles->removeElement($downloadFile)) {
+            // set the owning side to null (unless already changed)
+            if ($downloadFile->getAuctionId() === $this) {
+                $downloadFile->setAuctionId(null);
+            }
+        }
+
+        return $this;
     }
 }

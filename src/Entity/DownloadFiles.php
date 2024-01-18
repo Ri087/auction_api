@@ -2,11 +2,11 @@
 
 namespace App\Entity;
 
-use App\Repository\DownloadFilesRepository;
 use Doctrine\ORM\Mapping as ORM;
+use App\Repository\DownloadFilesRepository;
 use Symfony\Component\HttpFoundation\File\File;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\String\Slugger\AsciiSlugger;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 #[ORM\Entity(repositoryClass: DownloadFilesRepository::class)]
 class DownloadFiles
@@ -20,24 +20,24 @@ class DownloadFiles
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $realName = null;
+    private ?string $realname = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $publicPath = null;
+    private ?string $realpath = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $mineType = null;
+    private ?string $publicpath = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $slug = null;
-
+    private ?string $mimeType = null;
 
     private ?File $file = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $realPath = null;
+    private ?string $slug = null;
 
-
+    #[ORM\ManyToOne(inversedBy: 'downloadFiles')]
+    private ?Auction $auction_id = null;
     public function getId(): ?int
     {
         return $this->id;
@@ -55,57 +55,6 @@ class DownloadFiles
         return $this;
     }
 
-    public function getRealName(): ?string
-    {
-        return $this->realName;
-    }
-
-    public function setRealName(string $realName): static
-    {
-        $this->realName = $realName;
-
-        return $this;
-    }
-
-    public function getPublicPath(): ?string
-    {
-        return $this->publicPath;
-    }
-
-    public function setPublicPath(string $publicPath): static
-    {
-        $this->publicPath = $publicPath;
-
-        return $this;
-    }
-
-    public function getMineType(): ?string
-    {
-        return $this->mineType;
-    }
-
-    public function setMineType(string $mineType): static
-    {
-        $this->mineType = $mineType;
-
-        return $this;
-    }
-
-    public function getSlug(): ?string
-    {
-        $slugger = new AsciiSlugger();
-        $parseslug = $slugger->slug($this->slug . time());
-        $this->slug = $parseslug . "." . $this->getFile()->getClientOriginalExtension();
-        return $this->slug;
-    }
-
-    public function setSlug(string $slug): static
-    {
-        $this->slug = $slug;
-
-        return $this;
-    }
-
     public function getFile(): ?UploadedFile
     {
         return $this->file;
@@ -114,13 +63,14 @@ class DownloadFiles
     public function setFile(UploadedFile $file): static
     {
         $this->file = $file;
-        $this->setName($file->getClientOriginalName());
-        $this->setRealName($file->getClientOriginalName());
-        $this->setMineType($file->getMimeType());
-        $this->setPublicPath("documents/pictures/");
-        $this->setRealPath($file->getRealPath());
-        $this->setSlug($file->getClientOriginalName());
 
+        $this->setName($file->getClientOriginalName());
+        $this->setRealname($file->getClientOriginalName());
+        $this->setMimeType($file->getClientMimeType());
+
+        $this->setPublicpath("./documents/pictures");
+        $this->setRealpath("documents/pictures");
+        $this->setSlug($this->getRealname());
         $file->move(
             $this->getPublicPath(),
             $this->getSlug()
@@ -129,14 +79,75 @@ class DownloadFiles
         return $this;
     }
 
-    public function getRealPath(): ?string
+    public function getRealname(): ?string
     {
-        return $this->realPath;
+        return $this->realname;
     }
 
-    public function setRealPath(string $realPath): static
+    public function setRealname(string $realname): static
     {
-        $this->realPath = $realPath;
+        $this->realname = $realname;
+
+        return $this;
+    }
+
+    public function getRealpath(): ?string
+    {
+        return $this->realpath;
+    }
+
+    public function setRealpath(string $realpath): static
+    {
+        $this->realpath = $realpath;
+
+        return $this;
+    }
+
+    public function getPublicpath(): ?string
+    {
+        return $this->publicpath;
+    }
+
+    public function setPublicpath(string $publicpath): static
+    {
+        $this->publicpath = $publicpath;
+
+        return $this;
+    }
+
+    public function getMimeType(): ?string
+    {
+        return $this->mimeType;
+    }
+
+    public function setMimeType(string $mimeType): static
+    {
+        $this->mimeType = $mimeType;
+
+        return $this;
+    }
+
+    public function getSlug(): ?string
+    {
+        return $this->slug;
+    }
+    public function setSlug(string $slug): static
+    {
+        $slugger = new AsciiSlugger();
+        $parseslug = $slugger->slug($slug . time());
+        $this->slug = $parseslug . "." . $this->getFile()->getClientOriginalExtension();
+
+        return $this;
+    }
+
+    public function getAuctionId(): ?Auction
+    {
+        return $this->auction_id;
+    }
+
+    public function setAuctionId(?Auction $auction_id): static
+    {
+        $this->auction_id = $auction_id;
 
         return $this;
     }
