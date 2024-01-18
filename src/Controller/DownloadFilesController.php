@@ -13,10 +13,9 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class DownloadFilesController extends AbstractController
 {
-    #[Route('/download/files', name: 'app_download_files')]
+    #[Route('/', name: 'app.index')]
     public function index(): void
     {
-
     }
 
     #[Route('/api/download/files', name: 'download.files', methods: ['POST'])]
@@ -40,12 +39,12 @@ class DownloadFilesController extends AbstractController
             "publicPath" => $newFile->getPublicPath(),
             "mineType" => $newFile->getMineType(),
             "slug" => $slug,
-        ]
+        ];
 
 
 
-        $location = $urlGenerator->generate('app.index', ['picture' => $newFile->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
+        $location = $urlGenerator->generate('app.index', [], UrlGeneratorInterface::ABSOLUTE_URL);
 
-        return new JsonResponse($newFile, JsonResponse::HTTP_CREATED,[]);
+        return new JsonResponse($newFile, JsonResponse::HTTP_CREATED, ["Location" => $location . $realpath . "/" . $slug]);
     }
 }

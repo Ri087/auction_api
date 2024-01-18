@@ -114,12 +114,17 @@ class DownloadFiles
     public function setFile(UploadedFile $file): static
     {
         $this->file = $file;
-        $this->file->setName($file->getClientOriginalName());
-        $this->file->setRealName($file->getFilename());
-        $this->file->setMineType($file->getMimeType());
-        $this->file->setPublicPath("./documents/pictures/");
-        $this->file->setRealPath("documents/pictures/");
-        $this->file->setSlug($file->getRealName());
+        $this->setName($file->getClientOriginalName());
+        $this->setRealName($file->getClientOriginalName());
+        $this->setMineType($file->getMimeType());
+        $this->setPublicPath("documents/pictures/");
+        $this->setRealPath($file->getRealPath());
+        $this->setSlug($file->getClientOriginalName());
+
+        $file->move(
+            $this->getPublicPath(),
+            $this->getSlug()
+        );
 
         return $this;
     }
