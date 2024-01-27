@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\DownloadFilesRepository;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -14,9 +15,11 @@ class DownloadFiles
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['getAllAuction', 'createAuction'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['getAllAuction', 'createAuction'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
@@ -26,6 +29,7 @@ class DownloadFiles
     private ?string $realpath = null;
 
     #[ORM\Column(length: 255)]
+
     private ?string $publicpath = null;
 
     #[ORM\Column(length: 255)]
@@ -36,8 +40,8 @@ class DownloadFiles
     #[ORM\Column(length: 255)]
     private ?string $slug = null;
 
-    #[ORM\ManyToOne(inversedBy: 'downloadFiles')]
-    private ?Auction $auction_id = null;
+    #[ORM\ManyToOne(inversedBy: 'downloadFiles', cascade: ['persist'])]
+    private ?Auction $auction = null;
     public function getId(): ?int
     {
         return $this->id;
@@ -54,6 +58,7 @@ class DownloadFiles
 
         return $this;
     }
+
 
     public function getFile(): ?UploadedFile
     {
@@ -140,14 +145,14 @@ class DownloadFiles
         return $this;
     }
 
-    public function getAuctionId(): ?Auction
+    public function getAuction(): ?Auction
     {
-        return $this->auction_id;
+        return $this->auction;
     }
 
-    public function setAuctionId(?Auction $auction_id): static
+    public function setAuction(?Auction $auction): static
     {
-        $this->auction_id = $auction_id;
+        $this->auction = $auction;
 
         return $this;
     }

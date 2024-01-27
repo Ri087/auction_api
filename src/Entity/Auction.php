@@ -17,13 +17,13 @@ class Auction
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['getAllAuction'])]
+    #[Groups(['getAllAuction', 'createAuction'])]
     #[Assert\NotBlank(message: 'Id is required')]
 
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['getAllAuction'])]
+    #[Groups(['getAllAuction', 'createAuction'])]
     #[Assert\NotBlank(message: 'item_name is required')]
     #[Assert\Length(min: 5, minMessage: 'item_name doit au minimum avoir {{}} charactères')]
 
@@ -31,21 +31,36 @@ class Auction
 
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['getAllAuction', 'createAuction'])]
+    #[Assert\NotBlank(message: 'item_description is required')]
+    #[Assert\Length(min: 5, minMessage: 'item_description doit au minimum avoir {{}} charactères')]
+
     private ?string $item_description = null;
 
     #[ORM\Column]
+    #[Groups(['getAllAuction', 'createAuction'])]
+    #[Assert\NotBlank(message: 'price is required')]
+    #[Assert\Positive(message: 'price must be positive')]
     private ?float $price = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['getAllAuction', 'createAuction'])]
+    #[Assert\NotBlank(message: 'min_bid is required')]
+    #[Assert\Positive(message: 'min_bid must be positive')]
+
     private ?int $min_bid = null;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $created_at = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Groups(['getAllAuction', 'createAuction'])]
+
     private ?\DateTimeInterface $start_date = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Groups(['getAllAuction', 'createAuction'])]
+
     private ?\DateTimeInterface $end_date = null;
 
     #[ORM\Column]
@@ -57,8 +72,14 @@ class Auction
     #[ORM\OneToMany(mappedBy: 'auction', targetEntity: Offer::class)]
     private Collection $offers;
 
-    #[ORM\OneToMany(mappedBy: 'auction_id', targetEntity: DownloadFiles::class)]
+    #[ORM\OneToMany(mappedBy: 'auction', targetEntity: DownloadFiles::class)]
+    #[Groups(['getAllAuction', 'createAuction'])]
     private Collection $downloadFiles;
+
+    #[ORM\ManyToOne(inversedBy: 'auctions')]
+    private ?User $user = null;
+
+
 
     public function __construct()
     {
@@ -227,7 +248,7 @@ class Auction
     {
         if (!$this->downloadFiles->contains($downloadFile)) {
             $this->downloadFiles->add($downloadFile);
-            $downloadFile->setAuctionId($this);
+            $downloadFile->setAuction($this);
         }
 
         return $this;
@@ -237,10 +258,22 @@ class Auction
     {
         if ($this->downloadFiles->removeElement($downloadFile)) {
             // set the owning side to null (unless already changed)
-            if ($downloadFile->getAuctionId() === $this) {
-                $downloadFile->setAuctionId(null);
+            if ($downloadFile->getAuction() === $this) {
+                $downloadFile->setAuction(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+
+    public function setUser(?User $user): static
+    {
+        $this->user = $user;
 
         return $this;
     }

@@ -9,31 +9,30 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+
+
 
 class RegisterController extends AbstractController
 {
-    #[Route('/register', name: 'app.register.index')]
-    public function index(): void
-    {
-    }
 
     #[Route('/api/register', name: 'app.register', methods: ['POST'])]
-    public function Register(Request $request, EntityManagerInterface $entityManager, SerializerInterface $serializer): JsonResponse
+    public function register(UserPasswordHasherInterface $userPasswordHasher, Request $request, EntityManagerInterface $entityManager, SerializerInterface $serializer): JsonResponse
     {
-
         $user = $serializer->deserialize($request->getContent(), User::class, 'json');
+
+        // Hacher le mot de passe
+        $hashedPassword = $userPasswordHasher->hashPassword($user, $user->getPassword());
+        $user->setPassword($hashedPassword);
 
         $user->setRoles(["ROLE_USER"]);
 
         $entityManager->persist($user);
         $entityManager->flush();
 
-        // dd($user);
+        // Serializer l'utilisateur pour la réponse
+        $jsonUser = $serializer->serialize($user, 'json');
 
-        $jsonAuction = $serializer->serialize($user, 'json');
-
-        dd($jsonAuction);
-
-        return new JsonResponse($jsonAuction, JsonResponse::HTTP_CREATED);
+        return new JsonResponse($jsonUser, JsonResponse::HTTP_CREATED, [], true);
     }
 }
