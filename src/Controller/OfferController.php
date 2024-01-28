@@ -60,7 +60,6 @@ class OfferController extends AbstractController
         $page = $request->query->getInt('page', 1);
         $pageSize = 30;
 
-
         $idCache = "getAllOffer" . $page;
         $cache->invalidateTags(["OfferCache" . $page]);
 
@@ -92,7 +91,6 @@ class OfferController extends AbstractController
             return new JsonResponse("The amount must be greater than the minimum bid", Response::HTTP_BAD_REQUEST);
         }
 
-
         $offer->setCreatedAt(new \DateTimeImmutable());
         $offer->setAuction($auction);
         $offer->setUser($user);
@@ -106,8 +104,8 @@ class OfferController extends AbstractController
 
         $jsonOffer = $serializer->serialize($offer, 'json', ['groups' => 'createOffer']);
 
-        // $location = $urlGenerator->generate('offer.create', ['offer' => $offer->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
+        $location = $urlGenerator->generate('offer.create', ['offer' => $offer->getId(), 'auction' => $auction->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
 
-        return new JsonResponse($jsonOffer, Response::HTTP_CREATED, [], true);
+        return new JsonResponse($jsonOffer, Response::HTTP_CREATED, ["offer" => $location], true);
     }
 }
