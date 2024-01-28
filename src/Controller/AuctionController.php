@@ -109,6 +109,14 @@ class AuctionController extends AbstractController
     #[Route('/api/auctions', name: "auction.create", methods: ['POST'])]
     public function createAuction(#[CurrentUser] User $user, Request $request, SerializerInterface $serializer, EntityManagerInterface $entityManager, UrlGeneratorInterface $urlGenerator, LoggerInterface $logger): JsonResponse
     {
+        if ($request->request->get("end_date") < date("Y-m-d H:i:s")) {
+            return new JsonResponse(['error' => 'End date must be greater than today'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if ($request->request->get("start_date") > $request->request->get("end_date")) {
+            return new JsonResponse(['error' => 'End date must be greater than start date'], Response::HTTP_BAD_REQUEST);
+        }
+
         // $auction = $serializer->deserialize($request->getContent(), Auction::class, 'json');
         $auction = new Auction();
         $auction->setUser($user);

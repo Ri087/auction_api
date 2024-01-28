@@ -277,4 +277,10 @@ class Auction
 
         return $this;
     }
+
+    public function getIsFinished(): bool
+    {
+        // Supposons que `endDate` est un objet \DateTimeImmutable représentant la fin de l'enchère
+        return $this->end_date <= new \DateTimeImmutable();
+    }
 }

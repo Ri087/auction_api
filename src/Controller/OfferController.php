@@ -78,22 +78,20 @@ class OfferController extends AbstractController
         return new JsonResponse($jsonOffers, Response::HTTP_OK, [], true);
     }
 
-    // #[Route('/api/offer/{offer}', name: 'offer.get', methods: ['GET'])]
-    // public function getOffer(Offer $offer, SerializerInterface $serializer): JsonResponse
-    // {
-    //     $jsonOffer = $serializer->serialize($offer, 'json', ['groups' => 'getAllOffer']);
-    //     return new JsonResponse($jsonOffer, Response::HTTP_OK, ['accept' => 'json'], true);
-    // }
 
     #[Route('/api/offers/{auction}', name: "offer.create", methods: ['POST'])]
     public function createOffer(#[CurrentUser] User $user, Auction $auction, Request $request, SerializerInterface $serializer, EntityManagerInterface $entityManager, UrlGeneratorInterface $urlGenerator): JsonResponse
     {
+        if ($auction->getIsFinished()) {
+            return new JsonResponse("The auction is finished", Response::HTTP_BAD_REQUEST);
+        }
 
         $offer = $serializer->deserialize($request->getContent(), Offer::class, 'json');
 
         if ($offer->getAmount() <= $auction->getMinBid()) {
             return new JsonResponse("The amount must be greater than the minimum bid", Response::HTTP_BAD_REQUEST);
         }
+
 
         $offer->setCreatedAt(new \DateTimeImmutable());
         $offer->setAuction($auction);
@@ -105,11 +103,6 @@ class OfferController extends AbstractController
         $entityManager->persist($auction);
 
         $entityManager->flush();
-
-        // $auction->getId();
-        // $auction->getItemName();
-        // $auction->getPrice();
-
 
         $jsonOffer = $serializer->serialize($offer, 'json', ['groups' => 'createOffer']);
 
