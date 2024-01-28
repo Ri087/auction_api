@@ -123,6 +123,7 @@ class AuctionController extends AbstractController
         $auction->setUpdatedAt(new \DateTimeImmutable());
 
         $entityManager->persist($auction);
+        $entityManager->flush();
 
         $newFile = new DownloadFiles();
         $file = $request->files->get("file");
@@ -132,9 +133,6 @@ class AuctionController extends AbstractController
             $entityManager->persist($newFile);
             $entityManager->flush();
         }
-
-        $entityManager->flush();
-
 
         $jsonAuction = $serializer->serialize($auction, 'json', ['groups' => 'createAuction']);
 
@@ -197,4 +195,6 @@ class AuctionController extends AbstractController
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
+
+    //Pas Possibile de delte / update / une offre 
 }

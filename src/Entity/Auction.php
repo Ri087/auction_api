@@ -17,13 +17,13 @@ class Auction
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['getAllAuction', 'createAuction'])]
+    #[Groups(['getAllAuction', 'createAuction', 'createOffer', 'getAllOffer'])]
     #[Assert\NotBlank(message: 'Id is required')]
 
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['getAllAuction', 'createAuction'])]
+    #[Groups(['getAllAuction', 'createAuction', 'createOffer', 'getAllOffer'])]
     #[Assert\NotBlank(message: 'item_name is required')]
     #[Assert\Length(min: 5, minMessage: 'item_name doit au minimum avoir {{}} charactères')]
 
@@ -38,7 +38,7 @@ class Auction
     private ?string $item_description = null;
 
     #[ORM\Column]
-    #[Groups(['getAllAuction', 'createAuction'])]
+    #[Groups(['getAllAuction', 'createAuction', 'createOffer', 'getAllOffer'])]
     #[Assert\NotBlank(message: 'price is required')]
     #[Assert\Positive(message: 'price must be positive')]
     private ?float $price = null;

@@ -19,7 +19,6 @@ class DownloadFiles
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['getAllAuction', 'createAuction'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
@@ -38,6 +37,7 @@ class DownloadFiles
     private ?File $file = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['getAllAuction', 'createAuction'])]
     private ?string $slug = null;
 
     #[ORM\ManyToOne(inversedBy: 'downloadFiles', cascade: ['persist'])]

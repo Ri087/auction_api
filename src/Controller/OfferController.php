@@ -2,61 +2,119 @@
 
 namespace App\Controller;
 
+use App\Entity\Auction;
 use App\Entity\Offer;
+use App\Entity\User;
 use App\Repository\OfferRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Contracts\Cache\ItemInterface;
+use Knp\Component\Pager\PaginatorInterface;
+
 
 class OfferController extends AbstractController
 {
-    #[Route('/offer', name: 'app_offer')]
-    public function index(): JsonResponse
+    #[Route('/api/admin/offers', name: 'app_offer')]
+    #[IsGranted('ROLE_ADMIN', message: 'Only the owner can access this resource')]
+
+    public function index(Request $request, OfferRepository $repository, SerializerInterface $serializer, PaginatorInterface $paginator): JsonResponse
     {
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/OfferController.php',
-        ]);
-    }
-    #[Route('/api/offer', name: 'offer.getAll', methods: ['GET'])]
-    public function getAllOffer(OfferRepository $repository, SerializerInterface $serializer): JsonResponse
-    {
-        $offer = $repository->findAll();
-        $jsonOffer = $serializer->serialize($offer, 'json', ['groups' => 'getAllOffer']);
-        return new JsonResponse($jsonOffer, Response::HTTP_OK, [], true);
+        $filesystemAdapter = new FilesystemAdapter();
+        $cache = new TagAwareAdapter($filesystemAdapter);
+
+        $page = $request->query->getInt('page', 1);
+        $pageSize = 30;
+
+
+        $idCache = "getAllOffer" . $page;
+        $cache->invalidateTags(["OfferCache" . $page]);
+
+        $jsonOffers = $cache->get($idCache, function (ItemInterface $item) use ($repository, $serializer, $paginator, $page, $pageSize) {
+            $item->tag("OfferCache" . $page);
+            $query = $repository->createQueryBuilder('o')
+                ->getQuery();
+
+            $pagination = $paginator->paginate($query, $page, $pageSize);
+
+            return $serializer->serialize($pagination, 'json', ['groups' => 'getAllOffer']);
+        });
+        return new JsonResponse($jsonOffers, Response::HTTP_OK, [], true);
     }
 
-    #[Route('/api/offer/{offer}', name: 'offer.get', methods: ['GET'])]
-    public function getOffer(Offer $offer, SerializerInterface $serializer): JsonResponse
+    #[Route('/api/offers', name: 'offer.getAll', methods: ['GET'])]
+    public function getAllOffer(#[CurrentUser] User $user, Request $request, OfferRepository $repository, SerializerInterface $serializer, PaginatorInterface $paginator): JsonResponse
     {
-        $jsonOffer = $serializer->serialize($offer, 'json', ['groups' => 'getAllOffer']);
-        return new JsonResponse($jsonOffer, Response::HTTP_OK, ['accept' => 'json'], true);
+        $filesystemAdapter = new FilesystemAdapter();
+        $cache = new TagAwareAdapter($filesystemAdapter);
+
+        $page = $request->query->getInt('page', 1);
+        $pageSize = 30;
+
+
+        $idCache = "getAllOffer" . $page;
+        $cache->invalidateTags(["OfferCache" . $page]);
+
+        $jsonOffers = $cache->get($idCache, function (ItemInterface $item) use ($repository, $serializer, $paginator, $page, $pageSize, $user) {
+            $item->tag("OfferCache" . $page);
+            $query = $repository->createQueryBuilder('o')
+                ->where('o.user = :user') // Filtrez par l'utilisateur connecté
+                ->setParameter('user', $user)
+                ->getQuery();
+
+            $pagination = $paginator->paginate($query, $page, $pageSize);
+
+            return $serializer->serialize($pagination, 'json', ['groups' => 'getAllOffer']);
+        });
+        return new JsonResponse($jsonOffers, Response::HTTP_OK, [], true);
     }
 
-    #[Route('/api/offer', name: "offer.create", methods: ['POST'])]
-    public function createOffer(Request $request, SerializerInterface $serializer, EntityManagerInterface $entityManager, UrlGeneratorInterface $urlGenerator): JsonResponse
+    // #[Route('/api/offer/{offer}', name: 'offer.get', methods: ['GET'])]
+    // public function getOffer(Offer $offer, SerializerInterface $serializer): JsonResponse
+    // {
+    //     $jsonOffer = $serializer->serialize($offer, 'json', ['groups' => 'getAllOffer']);
+    //     return new JsonResponse($jsonOffer, Response::HTTP_OK, ['accept' => 'json'], true);
+    // }
+
+    #[Route('/api/offers/{auction}', name: "offer.create", methods: ['POST'])]
+    public function createOffer(#[CurrentUser] User $user, Auction $auction, Request $request, SerializerInterface $serializer, EntityManagerInterface $entityManager, UrlGeneratorInterface $urlGenerator): JsonResponse
     {
 
         $offer = $serializer->deserialize($request->getContent(), Offer::class, 'json');
 
-        $offer->setPrice((float)$request->request->get("amount"));
-        $offer->setAuction($request->request->get("auction"));
+        if ($offer->getAmount() <= $auction->getMinBid()) {
+            return new JsonResponse("The amount must be greater than the minimum bid", Response::HTTP_BAD_REQUEST);
+        }
 
         $offer->setCreatedAt(new \DateTimeImmutable());
+        $offer->setAuction($auction);
+        $offer->setUser($user);
+
+        $auction->setPrice($auction->getPrice() + $offer->getAmount());
 
         $entityManager->persist($offer);
+        $entityManager->persist($auction);
+
         $entityManager->flush();
 
+        // $auction->getId();
+        // $auction->getItemName();
+        // $auction->getPrice();
 
-        $jsonOffer = $serializer->serialize($offer, 'json');
 
-        $location = $urlGenerator->generate('offer.get', ['offer' => $offer->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
+        $jsonOffer = $serializer->serialize($offer, 'json', ['groups' => 'createOffer']);
 
-        return new JsonResponse($jsonOffer, Response::HTTP_CREATED, ["Location" => $location], true);
+        // $location = $urlGenerator->generate('offer.create', ['offer' => $offer->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        return new JsonResponse($jsonOffer, Response::HTTP_CREATED, [], true);
     }
 }
