@@ -21,7 +21,6 @@ use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Knp\Component\Pager\PaginatorInterface;
 
-
 class OfferController extends AbstractController
 {
     #[Route('/api/admin/offers', name: 'app_offer')]
