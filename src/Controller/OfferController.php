@@ -45,7 +45,7 @@ class OfferController extends AbstractController
 
             $pagination = $paginator->paginate($query, $page, $pageSize);
 
-            return $serializer->serialize($pagination, 'json', ['groups' => 'getAllOffer']);
+            return $serializer->serialize([$pagination], 'json', ['groups' => 'getAllOffer']);
         });
         return new JsonResponse($jsonOffers, Response::HTTP_OK, [], true);
     }
@@ -67,6 +67,34 @@ class OfferController extends AbstractController
             $query = $repository->createQueryBuilder('o')
                 ->where('o.user = :user') // Filtrez par l'utilisateur connecté
                 ->setParameter('user', $user)
+                ->getQuery();
+
+            $pagination = $paginator->paginate($query, $page, $pageSize);
+
+            return $serializer->serialize($pagination, 'json', ['groups' => 'getAllOffer']);
+        });
+        return new JsonResponse($jsonOffers, Response::HTTP_OK, [], true);
+    }
+
+    #[Route('/api/offers/{auction}', name: 'offer.getAll', methods: ['GET'])]
+    public function getAllOfferPerAuction(#[CurrentUser] User $user, Auction $auction, Request $request, OfferRepository $repository, SerializerInterface $serializer, PaginatorInterface $paginator): JsonResponse
+    {
+        $filesystemAdapter = new FilesystemAdapter();
+        $cache = new TagAwareAdapter($filesystemAdapter);
+
+        $page = $request->query->getInt('page', 1);
+        $pageSize = 30;
+
+        $idCache = "getAllOfferPerAuction" . $page;
+        $cache->invalidateTags(["OfferAuctionCache" . $page]);
+
+        $jsonOffers = $cache->get($idCache, function (ItemInterface $item) use ($repository, $serializer, $paginator, $page, $pageSize, $user, $auction) {
+            $item->tag("OfferAuctionCache" . $page);
+            $query = $repository->createQueryBuilder('o')
+                ->where('o.user = :user') // Filtrez par l'utilisateur connecté
+                ->setParameter('user', $user)
+                ->where('o.auction = :auction') // Filtrez par auction
+                ->setParameter('auction', $auction)
                 ->getQuery();
 
             $pagination = $paginator->paginate($query, $page, $pageSize);

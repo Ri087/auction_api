@@ -121,6 +121,10 @@ class ComposerStaticInitf1fa4451d6939f1a62bef07a49a16bcb
             'JMS\\Serializer\\' => 15,
             'JMS\\SerializerBundle\\' => 21,
         ),
+        'G' => 
+        array (
+            'Gesdinet\\JWTRefreshTokenBundle\\' => 31,
+        ),
         'F' => 
         array (
             'Faker\\' => 6,
@@ -430,6 +434,10 @@ class ComposerStaticInitf1fa4451d6939f1a62bef07a49a16bcb
         'JMS\\SerializerBundle\\' => 
         array (
             0 => __DIR__ . '/..' . '/jms/serializer-bundle',
+        ),
+        'Gesdinet\\JWTRefreshTokenBundle\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/gesdinet/jwt-refresh-token-bundle',
         ),
         'Faker\\' => 
         array (

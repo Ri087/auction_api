@@ -20,7 +20,7 @@ class DownloadFilesController extends AbstractController
     {
     }
 
-    #[Route('/api/file', name: 'files.create', methods: ["POST"])]
+    #[Route('/api/files', name: 'files.create', methods: ["POST"])]
     public function createFile(
         Request $request,
         DownloadFilesRepository $repository,

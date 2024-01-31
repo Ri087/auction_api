@@ -3,6 +3,7 @@
 namespace App\DataFixtures;
 
 use App\Entity\Auction;
+use App\Entity\DownloadFiles;
 use App\Entity\Offer;
 use App\Entity\User;
 use DateTimeImmutable;
@@ -73,36 +74,41 @@ class AppFixtures extends Fixture
         for ($i = 0; $i < 1000; $i++) {
             $auction = new Auction();
             $auction->setItemName($this->faker->name);
+            $auction->setUser($this->faker->randomElement($user));
             $auction->setItemDescription($this->faker->text);
             $auction->setMinBid($this->faker->numberBetween(100, 1000));
             $auction->setPrice($this->faker->numberBetween(1000, 10000));
 
-            $auction->setStartDate($this->faker->dateTimeBetween($this->faker->dateTimeThisYear()));
+            $auction->setStartDate(new DateTimeImmutable());
 
-            $auction->setCreatedAt(DateTimeImmutable::createFromMutable(
-                $this->faker->dateTimeBetween($this->faker->dateTimeThisYear())
-            ));
+            $auction->setCreatedAt(new DateTimeImmutable());
 
-            $auction->setUpdatedAt(DateTimeImmutable::createFromMutable(
-                $this->faker->dateTimeBetween($this->faker->dateTimeThisYear())
-            ));
+            $auction->setUpdatedAt(new DateTimeImmutable());
 
-            $auction->setEndDate(DateTimeImmutable::createFromMutable(
-                $this->faker->dateTimeBetween($this->faker->dateTimeThisYear())
-            ));
+            $auction->setEndDate(new DateTimeImmutable("+100 days"));
+
             $auction->setStatus($this->faker->randomElement(['ACTIVE', 'DELETE']));
             $auctionList[] = $auction;
             $manager->persist($auction);
         }
-        $manager->flush();
+
+        // $imageList = [];
+
+        // for ($i = 0; $i < 1000; $i++) {
+        //     $image = new DownloadFiles();
+        //     $image->setAuction($this->faker->randomElement($auctionList));
+        //     $image->setFile();
+        //     $imageList[] = $image;
+        //     $manager->persist($image);
+        // }
+        //     $manager->flush();
 
 
         for ($i = 0; $i < 1000; $i++) {
             $offer = new Offer();
             $offer->setAmount($this->faker->numberBetween(100, 1000));
-            $offer->setCreatedAt(DateTimeImmutable::createFromMutable(
-                $this->faker->dateTimeBetween($this->faker->dateTimeThisYear())
-            ));
+            $offer->setUser($this->faker->randomElement($user));
+            $offer->setCreatedAt(new DateTimeImmutable());
             $offer->setAuction($this->faker->randomElement($auctionList));
             $manager->persist($offer);
         }

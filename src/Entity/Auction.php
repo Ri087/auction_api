@@ -283,4 +283,8 @@ class Auction
         // Supposons que `endDate` est un objet \DateTimeImmutable représentant la fin de l'enchère
         return $this->end_date <= new \DateTimeImmutable() || $this->status === 'DELETE';
     }
+    public function getIsStarted(): bool
+    {
+        return $this->start_date > new \DateTimeImmutable();
+    }
 }

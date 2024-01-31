@@ -31,7 +31,6 @@ use Psr\Log\LoggerInterface;
 class AuctionController extends AbstractController
 {
 
-
     #[Route('api/admin/auctions', name: 'app_auction', methods: ['GET'])]
     #[IsGranted('ROLE_ADMIN', message: 'Only the owner can access this resource')]
 
@@ -109,6 +108,10 @@ class AuctionController extends AbstractController
     #[Route('/api/auctions', name: "auction.create", methods: ['POST'])]
     public function createAuction(#[CurrentUser] User $user, Request $request, SerializerInterface $serializer, EntityManagerInterface $entityManager, UrlGeneratorInterface $urlGenerator, LoggerInterface $logger): JsonResponse
     {
+        if ($request->request->get("start_date") == "now") {
+            $request->request->set("start_date", date("Y-m-d H:i:s"));
+        }
+
         if ($request->request->get("end_date") < date("Y-m-d H:i:s")) {
             return new JsonResponse(['error' => 'End date must be greater than today'], Response::HTTP_BAD_REQUEST);
         }
@@ -117,6 +120,7 @@ class AuctionController extends AbstractController
             return new JsonResponse(['error' => 'End date must be greater than start date'], Response::HTTP_BAD_REQUEST);
         }
 
+
         // $auction = $serializer->deserialize($request->getContent(), Auction::class, 'json');
         $auction = new Auction();
         $auction->setUser($user);
@@ -124,7 +128,7 @@ class AuctionController extends AbstractController
         $auction->setItemDescription($request->request->get("item_description"));
         $auction->setPrice($request->request->get("price"));
         $auction->setMinBid($request->request->get("min_bid"));
-        $auction->setStartDate(new \DateTimeImmutable($request->request->get("end_date")));
+        $auction->setStartDate(new \DateTimeImmutable($request->request->get("start_date")));
         $auction->setEndDate(new \DateTimeImmutable($request->request->get("end_date")));
         $auction->setStatus('ACTIVE');
         $auction->setCreatedAt(new \DateTimeImmutable());
@@ -150,7 +154,7 @@ class AuctionController extends AbstractController
     }
 
     #[Route('/api/auctions/{auction}/soft', name: 'auction.soft.delete', methods: ['DELETE'])]
-    public function softDeleteAuction(Auction $auction, EntityManagerInterface $entityManager): JsonResponse
+    public function softDeleteAuction(Auction $auction, SerializerInterface $serializer, EntityManagerInterface $entityManager): JsonResponse
     {
         $auction->setUpdatedAt(new \DateTimeImmutable());
         $auction->setStatus('DELETE');
@@ -159,12 +163,15 @@ class AuctionController extends AbstractController
 
         $entityManager->flush();
 
-        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+        $jsonContent = $serializer->serialize($auction, 'json');
+
+
+        return new JsonResponse($jsonContent, Response::HTTP_NO_CONTENT);
     }
 
 
     #[Route('/api/auctions/{auction}/hard', name: 'auction.hard.delete', methods: ['DELETE'])]
-    public function hardDeleteAuction(Auction $auction, EntityManagerInterface $entityManager): JsonResponse
+    public function hardDeleteAuction(Auction $auction, SerializerInterface $serializer, EntityManagerInterface $entityManager): JsonResponse
     {
         $faker = Factory::create();
 
@@ -185,7 +192,10 @@ class AuctionController extends AbstractController
         $entityManager->persist($auction);
         $entityManager->flush();
 
-        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+        $jsonContent = $serializer->serialize($auction, 'json');
+
+
+        return new JsonResponse($jsonContent, Response::HTTP_NO_CONTENT);
     }
 
     #[Route('/api/auctions/{auction}', name: 'auction.update', methods: ['PATCH', "PUT"])]
@@ -201,7 +211,9 @@ class AuctionController extends AbstractController
         $entityManager->persist($auction);
         $entityManager->flush();
 
-        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+        $jsonContent = $serializer->serialize($auction, 'json');
+
+        return new JsonResponse($jsonContent, Response::HTTP_NO_CONTENT);
     }
 
     //Pas Possibile de delte / update / une offre 
