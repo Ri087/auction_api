@@ -63,3 +63,16 @@ php bin/console doctrine:migration:migrate
 ```sh
 php bin/console lexik:jwt:generate-keypair
 ```
+
+```sh
+Admin{
+    "username" : "admin",
+    "password" : "admin"
+    }
+User{
+    "username" : "public",
+    "password" : "publix"
+    }
+```
+
+owner :@CezGain @Ri087
