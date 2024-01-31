@@ -52,7 +52,11 @@ cp .env.example .env
 php bin/console lexik:jwt:generate-keypair
 ```
 
-### Make migration
+### Create Database
+
+```sh
+php bin/console doctrine:database:create
+```
 
 ```sh
 php bin/console doctrine:migration:migrate
@@ -62,6 +66,12 @@ php bin/console doctrine:migration:migrate
 
 ```sh
 php bin/console lexik:jwt:generate-keypair
+```
+
+### Start Project
+
+```sh
+php bin/console server:start
 ```
 
 ```sh
