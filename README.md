@@ -71,7 +71,7 @@ Admin{
     }
 User{
     "username" : "public",
-    "password" : "publix"
+    "password" : "public"
     }
 ```
 
