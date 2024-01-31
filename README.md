@@ -34,16 +34,16 @@ git clone https://github.com/Ri087/auction_api.git
 
 Then, enter in the project folder
 
-### Install dependencies
-
-```sh
-composer install
-```
-
 ### Copy env
 
 ```sh
 cp .env.example .env
+```
+
+### Install dependencies
+
+```sh
+composer install
 ```
 
 ### Generate keypair JWT
@@ -65,7 +65,7 @@ php bin/console doctrine:migration:migrate
 ### Generate DataFixture
 
 ```sh
-php bin/console lexik:jwt:generate-keypair
+php bin/console doctrine:fixtures:load
 ```
 
 ### Start Project
